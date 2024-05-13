@@ -12,73 +12,79 @@ SemaphoreHandle_t cancela;
 int fila_e_o = 0; // Fila leste para oeste
 int fila_o_e = 0; // Fila oeste para leste
 
-void trem(void *pvParameters)
+void trem_o_e(void *pvParameters)
 {
     int id = *((int *)pvParameters);
-    int direcao;
-
-    // Decide aleatoriamente a direção do trem (0: leste para oeste, 1: oeste para leste)
-    direcao = rand() % 2;
 
     while (1)
     {
         // Determina a mensagem de direção baseada na direção do trem
-        char *mensagem_direcao = (direcao == 0) ? "leste para oeste" : "oeste para leste";
+        char *mensagem_direcao = "oeste para leste";
 
         printf("Trem %d se aproximando do cruzamento (%s).\n", id, mensagem_direcao);
 
-        if (direcao == 0)
+        xSemaphoreTake(mutex_o_e, portMAX_DELAY);
+        fila_o_e++;
+        if (fila_o_e == 1 && fila_e_o == 0)
         {
-            xSemaphoreTake(mutex_e_o, portMAX_DELAY);
-            fila_e_o++;
-            if (fila_e_o == 1 && fila_o_e == 0)
-            {
-                printf("Semaforo fica vermelho -- Cancela fechada\n");
-                xSemaphoreTake(semaphore, portMAX_DELAY);
-            }
-            xSemaphoreGive(mutex_e_o);
+            printf("Semaforo fica vermelho -- Cancela fechada\n");
+            xSemaphoreTake(semaphore, portMAX_DELAY);
         }
-        else
-        {
-            xSemaphoreTake(mutex_o_e, portMAX_DELAY);
-            fila_o_e++;
-            if (fila_o_e == 1 && fila_e_o == 0)
-            {
-                printf("Semaforo fica vermelho -- Cancela fechada\n");
-                xSemaphoreTake(semaphore, portMAX_DELAY);
-            }
-            xSemaphoreGive(mutex_o_e);
-        }
+        xSemaphoreGive(mutex_o_e);
 
         printf("Trem %d cruzando o cruzamento (%s).\n", id, mensagem_direcao);
         vTaskDelay(7); // Simula o tempo de cruzamento
         printf("Trem %d passou pelo cruzamento (%s).\n", id, mensagem_direcao);
 
-        if (direcao == 0)
+        xSemaphoreTake(mutex_o_e, portMAX_DELAY);
+        fila_o_e--;
+        if (fila_e_o == 0 && fila_o_e == 0)
         {
-            xSemaphoreTake(mutex_e_o, portMAX_DELAY);
-            fila_e_o--;
-            if (fila_e_o == 0 && fila_o_e == 0)
-            {
-                printf("Semaforo fica verde -- Cancela aberta\n");
-                xSemaphoreGive(semaphore);
-            }
-            xSemaphoreGive(mutex_e_o);
+            printf("Semaforo fica verde -- Cancela aberta\n");
+            xSemaphoreGive(semaphore);
         }
-        else
-        {
-            xSemaphoreTake(mutex_o_e, portMAX_DELAY);
-            fila_o_e--;
-            if (fila_e_o == 0 && fila_o_e == 0)
-            {
-                printf("Semaforo fica verde -- Cancela aberta\n");
-                xSemaphoreGive(semaphore);
-            }
-            xSemaphoreGive(mutex_o_e);
-        }
+        xSemaphoreGive(mutex_o_e);
 
-        id = id+1;
+        id = id + 1;
         vTaskDelay((rand() % 125 + 200) / portTICK_PERIOD_MS); // Simula o tempo entre os trens
+    }
+}
+
+void trem_e_o(void *pvParameters)
+{
+    int id = *((int *)pvParameters);
+
+    while (1)
+    {
+        // Determina a mensagem de direção baseada na direção do trem
+        char *mensagem_direcao = "leste para oeste";
+
+        printf("Trem %d se aproximando do cruzamento (%s).\n", id, mensagem_direcao);
+
+        xSemaphoreTake(mutex_e_o, portMAX_DELAY);
+        fila_e_o++;
+        if (fila_e_o == 1 && fila_o_e == 0)
+        {
+            printf("Semaforo fica vermelho -- Cancela fechada\n");
+            xSemaphoreTake(semaphore, portMAX_DELAY);
+        }
+        xSemaphoreGive(mutex_e_o);
+
+        printf("Trem %d cruzando o cruzamento (%s).\n", id, mensagem_direcao);
+        vTaskDelay(7); // Simula o tempo de cruzamento
+        printf("Trem %d passou pelo cruzamento (%s).\n", id, mensagem_direcao);
+
+        xSemaphoreTake(mutex_e_o, portMAX_DELAY);
+        fila_e_o--;
+        if (fila_e_o == 0 && fila_o_e == 0)
+        {
+            printf("Semaforo fica verde -- Cancela aberta\n");
+            xSemaphoreGive(semaphore);
+        }
+        xSemaphoreGive(mutex_e_o);
+
+        id = id + 1;
+        vTaskDelay((rand() % 250 + 200) / portTICK_PERIOD_MS); // Simula o tempo entre os trens
     }
 }
 
@@ -102,7 +108,7 @@ void carro(void *pvParameters)
             printf("Carro %d esperando na cancela.\n", id);
         }
 
-        id = id+1;
+        id = id + 1;
         vTaskDelay((rand() % 180 + 200) / portTICK_PERIOD_MS); // Simula o tempo entre os carros
     }
 }
@@ -120,7 +126,8 @@ int main()
     // for (int i = 0; i < 2; ++i) {
     int *id = (int *)malloc(sizeof(int));
     *id = 1;
-    xTaskCreate(trem, "Trem", 2048, (void *)id, 1, NULL);
+    xTaskCreate(trem_o_e, "Trem", 2048, (void *)id, 1, NULL);
+    xTaskCreate(trem_e_o, "Trem", 2048, (void *)id, 1, NULL);
     // }
 
     // Criando threads para os carros
