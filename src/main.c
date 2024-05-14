@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h> // Inclua a biblioteca time.h para usar a função srand
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
@@ -13,6 +14,15 @@ int fila_o_e = 0; // Fila de trens no sentido oeste para leste
 
 int trem_id = 1; // ID do trem
 
+// Definição de cores ANSI
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
 // Função para o comportamento da task trem - sentido oeste para leste
 void trem_o_e(void *pvParameters)
 {
@@ -20,7 +30,7 @@ void trem_o_e(void *pvParameters)
     while (1)
     {
         // Determina a mensagem de direção baseada na direção do trem
-        char *mensagem_direcao = "oeste para leste";
+        char *mensagem_direcao = ANSI_COLOR_CYAN "oeste para leste" ANSI_COLOR_RESET;
 
         printf("Trem %d se aproximando do cruzamento (%s).\n", trem_id, mensagem_direcao);
 
@@ -28,7 +38,7 @@ void trem_o_e(void *pvParameters)
         fila_o_e++; 
         if (fila_o_e == 1 && fila_e_o == 0)
         {
-            printf("Semaforo fica vermelho -- Cancela fechada\n");
+            printf("Semaforo fica " ANSI_COLOR_RED "vermelho" ANSI_COLOR_RESET " -- Cancela fechada\n");
             xSemaphoreTake(semaphore, portMAX_DELAY); // Fecha a cancela se um trem se aproxima enquanto não há outros trens
         }
         xSemaphoreGive(mutex_o_e); // Libera o mutex para a fila
@@ -41,7 +51,7 @@ void trem_o_e(void *pvParameters)
         fila_o_e--; 
         if (fila_e_o == 0 && fila_o_e == 0)
         {
-            printf("Semaforo fica verde -- Cancela aberta\n");
+            printf("Semaforo fica " ANSI_COLOR_GREEN "verde" ANSI_COLOR_RESET " -- Cancela aberta\n");
             xSemaphoreGive(semaphore); // Abre a cancela se não há trens
         }
         xSemaphoreGive(mutex_o_e); // Libera o mutex para a fila
@@ -58,7 +68,7 @@ void trem_e_o(void *pvParameters)
     while (1)
     {
         // Determina a mensagem de direção baseada na direção do trem
-        char *mensagem_direcao = "leste para oeste";
+        char *mensagem_direcao = ANSI_COLOR_MAGENTA "leste para oeste" ANSI_COLOR_RESET;
 
         printf("Trem %d se aproximando do cruzamento (%s).\n", trem_id, mensagem_direcao);
 
@@ -66,7 +76,7 @@ void trem_e_o(void *pvParameters)
         fila_e_o++; 
         if (fila_e_o == 1 && fila_o_e == 0)
         {
-            printf("Semaforo fica vermelho -- Cancela fechada\n"); // Fecha a cancela se um trem se aproxima enquanto não há outros trens
+            printf("Semaforo fica " ANSI_COLOR_RED "vermelho" ANSI_COLOR_RESET " -- Cancela fechada\n"); // Fecha a cancela se um trem se aproxima enquanto não há outros trens
             xSemaphoreTake(semaphore, portMAX_DELAY);
         }
         xSemaphoreGive(mutex_e_o); // Libera o mutex
@@ -79,10 +89,10 @@ void trem_e_o(void *pvParameters)
         fila_e_o--; 
         if (fila_e_o == 0 && fila_o_e == 0)
         {
-            printf("Semaforo fica verde -- Cancela aberta\n");
+            printf("Semaforo fica " ANSI_COLOR_GREEN "verde" ANSI_COLOR_RESET " -- Cancela aberta\n");
             xSemaphoreGive(semaphore); //Abre a cancela se não há trens
         }
-        xSemaphoreGive(mutex_e_o); // Libera o mutex
+        xSemaphoreGive(mutex_e_o); // Libera o mutex para a fila
 
         trem_id++;
         vTaskDelay((rand() % 250 + 200) / portTICK_PERIOD_MS); // Simula o tempo entre os trens

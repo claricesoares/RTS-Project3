@@ -35,7 +35,12 @@ cd build
 ```
 **Obeservação:** Ao realizar a build pela primeira vez, o VSCode pode apresentar um erro. Repita o comando para corrigir o problema, que geralmente é resolvido na segunda tentativa.
 
-## Demonstração e Explicação
+## Saída esperada
+
+![Exemplo de saída](exemplo.png)
+
+
+## Demonstração e explicação
 
 ## Equipe
 
