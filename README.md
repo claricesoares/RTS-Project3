@@ -37,7 +37,7 @@ cd build
 
 ## Saída esperada
 
-![Exemplo de saída](exemplo.png)
+![Exemplo de saída](exemplo2.png)
 
 
 ## Demonstração e explicação
