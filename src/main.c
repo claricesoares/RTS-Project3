@@ -12,7 +12,7 @@ SemaphoreHandle_t mutex_o_e; // Mutex para fila de trens no sentido oeste para l
 int fila_e_o = 0; // Fila de trens no sentido leste para oeste 
 int fila_o_e = 0; // Fila de trens no sentido oeste para leste
 
-int trem_id = 1; // ID do trem
+
 
 // Definição de cores ANSI
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -26,7 +26,7 @@ int trem_id = 1; // ID do trem
 // Função para o comportamento da task trem - sentido oeste para leste
 void trem_o_e(void *pvParameters)
 {
-    int id = *((int *)pvParameters);
+    int trem_id  = 0;
     while (1)
     {
         // Determina a mensagem de direção baseada na direção do trem
@@ -56,7 +56,7 @@ void trem_o_e(void *pvParameters)
         }
         xSemaphoreGive(mutex_o_e); // Libera o mutex para a fila
 
-        trem_id++;
+        trem_id = trem_id+2;
         vTaskDelay((rand() % 125 + 200) / portTICK_PERIOD_MS); // Simula o tempo entre os trens
     }
 }
@@ -64,7 +64,7 @@ void trem_o_e(void *pvParameters)
 // Função para o comportamento da task trem - sentido leste para oeste
 void trem_e_o(void *pvParameters)
 {
-    int id = *((int *)pvParameters);
+    int trem_id  = 1;
     while (1)
     {
         // Determina a mensagem de direção baseada na direção do trem
@@ -94,7 +94,7 @@ void trem_e_o(void *pvParameters)
         }
         xSemaphoreGive(mutex_e_o); // Libera o mutex para a fila
 
-        trem_id++;
+        trem_id= trem_id + 2;
         vTaskDelay((rand() % 250 + 200) / portTICK_PERIOD_MS); // Simula o tempo entre os trens
     }
 }
